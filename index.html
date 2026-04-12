@@ -1,283 +1,223 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>02.ai - 迎接词元经济时代</title>
+    <title>02.ai - 从比特到词元，开启智能时代</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Noto+Sans+SC:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <!-- 引入 Lucide 图标库 -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans SC', 'sans-serif'],
+                    },
+                    colors: {
+                        digital: '#00f0ff', // 赛博蓝 - 代表 01 比特
+                        intel: '#b026ff',   // 智能紫 - 代表 02 词元
+                        dark: '#050505',
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --theme-color-1: #ff007f; /* 亮粉/玫红 */
-            --theme-color-2: #7000ff; /* 赛博紫 */
-            --theme-color-3: #00f0ff; /* 科技蓝 */
-            --bg-dark: #030305;
-        }
-
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg-dark);
-            font-family: 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        body {
+            background-color: #050505;
             color: #ffffff;
-            overflow: hidden;
+            overflow-x: hidden;
         }
-
-        /* 动态背景渐变 */
-        .bg-gradient {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 50%, rgba(112, 0, 255, 0.1) 0%, rgba(3, 3, 5, 1) 60%);
-            z-index: 1;
-        }
-
-        /* 粒子画布 */
-        #token-network {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 2;
-        }
-
-        /* 主体内容容器 */
-        .hero-container {
-            position: relative;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-            pointer-events: none; /* 让鼠标事件穿透到 Canvas */
-        }
-
-        /* 巨大的02发光字 */
-        .brand-core {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        /* 核心呼吸光晕 */
-        .core-glow {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 300px; height: 300px;
-            background: radial-gradient(circle, rgba(255, 0, 127, 0.4) 0%, rgba(112, 0, 255, 0) 70%);
-            border-radius: 50%;
-            filter: blur(20px);
-            animation: pulse 4s ease-in-out infinite alternate;
-            z-index: -1;
-        }
-
-        .title-02 {
-            font-size: 12rem;
-            font-weight: 900;
-            line-height: 1;
-            margin: 0;
-            letter-spacing: -5px;
-            background: linear-gradient(135deg, var(--theme-color-3), #ffffff, var(--theme-color-1));
-            -webkit-background-clip: text;
-            color: transparent;
-            /* 玻璃质感倒影 */
-            -webkit-box-reflect: below -30px linear-gradient(transparent 50%, rgba(255,255,255,0.2));
-        }
-
-        .domain-ext {
-            font-size: 3rem;
-            font-weight: 300;
-            color: rgba(255,255,255,0.8);
-            letter-spacing: 0;
-        }
-
-        /* 文字描述 */
-        .tagline {
-            margin-top: 40px;
-            font-size: 1.8rem;
-            font-weight: 600;
-            letter-spacing: 8px;
-            color: #fff;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-        }
-
-        .description {
-            margin-top: 20px;
-            font-size: 1.1rem;
-            line-height: 2;
-            color: rgba(255, 255, 255, 0.6);
-            max-width: 600px;
-            letter-spacing: 2px;
-            font-weight: 300;
+        .glass-panel {
             background: rgba(255, 255, 255, 0.03);
-            padding: 20px 40px;
-            border-radius: 30px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
         }
-
-        .highlight {
-            color: var(--theme-color-1);
-            font-weight: bold;
+        .text-gradient-01 {
+            background: linear-gradient(to right, #00f0ff, #0080ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-
-        /* 呼吸动画 */
-        @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
-            100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        .text-gradient-02 {
+            background: linear-gradient(to right, #b026ff, #ff26b0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-
-        /* 响应式 */
-        @media (max-width: 768px) {
-            .title-02 { font-size: 8rem; }
-            .domain-ext { font-size: 2rem; }
-            .tagline { font-size: 1.2rem; }
-            .description { font-size: 0.9rem; padding: 15px 20px; width: 85%; }
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
         }
     </style>
 </head>
-<body>
+<body class="antialiased selection:bg-intel selection:text-white relative">
 
-    <!-- 渐变背景层 -->
-    <div class="bg-gradient"></div>
-
-    <!-- 粒子交互层 -->
-    <canvas id="token-network"></canvas>
-
-    <!-- 主视觉内容 -->
-    <div class="hero-container">
-        <div class="brand-core">
-            <div class="core-glow"></div>
-            <h1 class="title-02">02<span class="domain-ext">.ai</span></h1>
-        </div>
-        <div class="tagline">词元 · 智能时代的新基石</div>
-        <div class="description">
-            大模型处理信息的最小单元。<br>
-            从算力消耗到智能涌现，这里是 <span class="highlight">“词元经济”</span> 的起点。<br>
-            重塑未来，构建全新的全球数字价值体系。
-        </div>
+    <!-- 背景光效动画 -->
+    <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-digital/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
+        <div class="absolute top-[20%] right-[-10%] w-96 h-96 bg-intel/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-2000"></div>
+        <div class="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-pink-500/10 rounded-full mix-blend-screen filter blur-[120px] animate-blob animation-delay-4000"></div>
+        <div class="absolute inset-0 bg-grid z-0 opacity-50"></div>
     </div>
 
+    <!-- 导航栏 -->
+    <nav class="relative z-10 w-full px-6 py-6 flex justify-between items-center max-w-7xl mx-auto">
+        <div class="flex items-center gap-2">
+            <span class="text-3xl font-black tracking-tighter">02<span class="text-intel">.ai</span></span>
+        </div>
+        <div class="hidden md:flex gap-8 text-sm font-medium text-gray-400">
+            <a href="#concept" class="hover:text-white transition-colors">概念 (Concept)</a>
+            <a href="#vision" class="hover:text-white transition-colors">愿景 (Vision)</a>
+            <a href="#" class="hover:text-white transition-colors">联系我们</a>
+        </div>
+        <button class="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md transition-all text-sm font-semibold">
+            探索未来
+        </button>
+    </nav>
+
+    <!-- 主视觉区域 (Hero) -->
+    <main class="relative z-10 min-h-[85vh] flex flex-col justify-center items-center text-center px-4 max-w-5xl mx-auto pt-10 pb-20">
+        
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel mb-8 animate-float">
+            <i data-lucide="sparkles" class="w-4 h-4 text-intel"></i>
+            <span class="text-xs md:text-sm font-medium tracking-wide text-gray-300">词元经济 (Token Economy) 时代已来</span>
+        </div>
+
+        <h1 class="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-tight mb-6">
+            <span class="block">进化，从 <span class="text-gradient-01">01</span></span>
+            <span class="block">跃迁至 <span class="text-gradient-02">02</span></span>
+        </h1>
+        
+        <p class="text-lg md:text-2xl text-gray-400 max-w-3xl mb-12 font-light leading-relaxed">
+            世界不再仅仅由代码构建。我们正在跨越以比特为基础的数字化阶段，<br class="hidden md:block">
+            迈入以<strong class="text-white font-semibold">词元 (Token)</strong> 为核心的通用人工智能时代。
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-6 w-full justify-center">
+            <!-- 01 概念卡片 -->
+            <div class="glass-panel p-8 rounded-3xl sm:w-80 text-left relative overflow-hidden group hover:border-digital/50 transition-all duration-500">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i data-lucide="binary" class="w-24 h-24 text-digital"></i>
+                </div>
+                <div class="text-digital font-mono text-xl font-bold mb-2">01</div>
+                <h3 class="text-2xl font-bold text-white mb-2">比特 (Bits)</h3>
+                <p class="text-gray-400 text-sm mb-6">信息的基础单位</p>
+                <div class="flex items-center gap-2 text-sm font-medium">
+                    <span class="w-2 h-2 rounded-full bg-digital animate-pulse"></span>
+                    代表：数字化 (Digitization)
+                </div>
+            </div>
+
+            <!-- 连接箭头 -->
+            <div class="flex items-center justify-center sm:rotate-0 rotate-90 text-gray-600">
+                <i data-lucide="move-right" class="w-8 h-8"></i>
+            </div>
+
+            <!-- 02 概念卡片 -->
+            <div class="glass-panel p-8 rounded-3xl sm:w-80 text-left relative overflow-hidden group hover:border-intel/50 transition-all duration-500">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i data-lucide="cpu" class="w-24 h-24 text-intel"></i>
+                </div>
+                <div class="text-intel font-mono text-xl font-bold mb-2">02</div>
+                <h3 class="text-2xl font-bold text-white mb-2">词元 (Tokens)</h3>
+                <p class="text-gray-400 text-sm mb-6">智能的计算单元</p>
+                <div class="flex items-center gap-2 text-sm font-medium">
+                    <span class="w-2 h-2 rounded-full bg-intel animate-pulse"></span>
+                    代表：智能化 (Intelligentization)
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 详细概念解释区 -->
+    <section id="concept" class="relative z-10 py-24 bg-dark/50 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-bold mb-4">重塑认知的底层逻辑</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">02.ai 并非仅仅是一个域名，它宣告着一种全新计算范式与经济形态的诞生。</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-8">
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 mt-1">
+                            <div class="w-12 h-12 rounded-2xl bg-digital/10 flex items-center justify-center border border-digital/20">
+                                <i data-lucide="database" class="w-6 h-6 text-digital"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">数字经济的尽头 (01)</h4>
+                            <p class="text-gray-400 leading-relaxed text-sm">
+                                过去几十年，我们致力于将物理世界转化为 0 和 1 的比特。软件吃掉了世界，互联网连接了信息，完成了"数字化"的基础建设。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 mt-1">
+                            <div class="w-12 h-12 rounded-2xl bg-intel/10 flex items-center justify-center border border-intel/20">
+                                <i data-lucide="brain-circuit" class="w-6 h-6 text-intel"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">词元经济的开端 (02)</h4>
+                            <p class="text-gray-400 leading-relaxed text-sm">
+                                大语言模型时代的到来，让 AI 处理信息的最小单元变为了“词元 (Token)”。它不仅是信息的载体，更是算力、智能和价值的衡量标准。从处理数据到生成知识，这就是"智能化"。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 动态视觉球体 -->
+                <div class="relative h-[400px] w-full flex items-center justify-center glass-panel rounded-3xl overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-digital/10 to-intel/10"></div>
+                    <div class="relative w-48 h-48 rounded-full border-2 border-dashed border-gray-600 animate-[spin_20s_linear_infinite] flex items-center justify-center">
+                        <div class="absolute w-64 h-64 rounded-full border border-intel/30 animate-[spin_15s_reverse_linear_infinite]"></div>
+                        <div class="absolute w-32 h-32 bg-gradient-to-tr from-digital to-intel rounded-full blur-xl opacity-50 animate-pulse-slow"></div>
+                        <span class="text-white font-black text-4xl z-10 font-mono tracking-tighter">02.ai</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 底部 -->
+    <footer class="relative z-10 py-12 border-t border-white/10 bg-black text-center">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col items-center">
+            <h2 class="text-2xl font-black mb-6 tracking-tighter">02<span class="text-intel">.ai</span></h2>
+            <p class="text-gray-500 text-sm mb-8 max-w-md">
+                This is a premium domain concept showcasing the transition from Bits to Tokens.
+                迎接词元经济时代的终极数字资产。
+            </p>
+            <div class="text-gray-600 text-xs">
+                &copy; 2026 02.ai Concept. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
     <script>
-        const canvas = document.getElementById('token-network');
-        const ctx = canvas.getContext('2d');
-        
-        let width, height;
-        let particles =[];
-        
-        // 鼠标位置对象
-        const mouse = {
-            x: null,
-            y: null,
-            radius: 150 // 鼠标吸引半径
-        };
-
-        // 监听鼠标移动（让鼠标事件作用于 window 上，因为上层 div 设置了 pointer-events: none）
-        window.addEventListener('mousemove', (event) => {
-            mouse.x = event.x;
-            mouse.y = event.y;
-        });
-        
-        // 鼠标移出屏幕
-        window.addEventListener('mouseout', () => {
-            mouse.x = null;
-            mouse.y = null;
-        });
-
-        function resize() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        class TokenNode {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.baseX = this.x;
-                this.baseY = this.y;
-                this.size = Math.random() * 2 + 1;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.color = Math.random() > 0.5 ? '#ff007f' : '#00f0ff'; // 粉色与蓝色节点交错
-            }
-
-            update() {
-                // 基础漂浮运动
-                this.x += this.vx;
-                this.y += this.vy;
-
-                // 边界反弹
-                if (this.x < 0 || this.x > width) this.vx *= -1;
-                if (this.y < 0 || this.y > height) this.vy *= -1;
-
-                // 鼠标交互：引力效果
-                if (mouse.x != null && mouse.y != null) {
-                    let dx = mouse.x - this.x;
-                    let dy = mouse.y - this.y;
-                    let distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distance < mouse.radius) {
-                        // 距离越近，引力越大，节点向鼠标靠拢
-                        const forceDirectionX = dx / distance;
-                        const forceDirectionY = dy / distance;
-                        const force = (mouse.radius - distance) / mouse.radius;
-                        
-                        this.x += forceDirectionX * force * 2;
-                        this.y += forceDirectionY * force * 2;
-                    }
-                }
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-            }
-        }
-
-        // 初始化 120 个词元节点
-        for (let i = 0; i < 120; i++) {
-            particles.push(new TokenNode());
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, width, height);
-            
-            // 绘制节点并更新位置
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-            
-            // 绘制“词元”之间的连接线，形成神经网络感
-            ctx.lineWidth = 0.5;
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist < 100) {
-                        // 根据距离计算连线的透明度
-                        const opacity = 1 - (dist / 100);
-                        // 创建渐变连线（或者纯色透明连线）
-                        ctx.strokeStyle = `rgba(112, 0, 255, ${opacity * 0.8})`; 
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                    }
-                }
-            }
-            requestAnimationFrame(animate);
-        }
-        
-        animate();
+        // 初始化 Lucide 图标
+        lucide.createIcons();
     </script>
 </body>
 </html>
