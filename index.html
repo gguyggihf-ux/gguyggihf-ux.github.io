@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02.ai - 迎接词元经济时代</title>
+    <style>
+        :root {
+            --theme-color-1: #ff007f; /* 亮粉/玫红 */
+            --theme-color-2: #7000ff; /* 赛博紫 */
+            --theme-color-3: #00f0ff; /* 科技蓝 */
+            --bg-dark: #030305;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-dark);
+            font-family: 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        /* 动态背景渐变 */
+        .bg-gradient {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(112, 0, 255, 0.1) 0%, rgba(3, 3, 5, 1) 60%);
+            z-index: 1;
+        }
+
+        /* 粒子画布 */
+        #token-network {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2;
+        }
+
+        /* 主体内容容器 */
+        .hero-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            pointer-events: none; /* 让鼠标事件穿透到 Canvas */
+        }
+
+        /* 巨大的02发光字 */
+        .brand-core {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        /* 核心呼吸光晕 */
+        .core-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(255, 0, 127, 0.4) 0%, rgba(112, 0, 255, 0) 70%);
+            border-radius: 50%;
+            filter: blur(20px);
+            animation: pulse 4s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+
+        .title-02 {
+            font-size: 12rem;
+            font-weight: 900;
+            line-height: 1;
+            margin: 0;
+            letter-spacing: -5px;
+            background: linear-gradient(135deg, var(--theme-color-3), #ffffff, var(--theme-color-1));
+            -webkit-background-clip: text;
+            color: transparent;
+            /* 玻璃质感倒影 */
+            -webkit-box-reflect: below -30px linear-gradient(transparent 50%, rgba(255,255,255,0.2));
+        }
+
+        .domain-ext {
+            font-size: 3rem;
+            font-weight: 300;
+            color: rgba(255,255,255,0.8);
+            letter-spacing: 0;
+        }
+
+        /* 文字描述 */
+        .tagline {
+            margin-top: 40px;
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: 8px;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .description {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            line-height: 2;
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 600px;
+            letter-spacing: 2px;
+            font-weight: 300;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .highlight {
+            color: var(--theme-color-1);
+            font-weight: bold;
+        }
+
+        /* 呼吸动画 */
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+            100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .title-02 { font-size: 8rem; }
+            .domain-ext { font-size: 2rem; }
+            .tagline { font-size: 1.2rem; }
+            .description { font-size: 0.9rem; padding: 15px 20px; width: 85%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 渐变背景层 -->
+    <div class="bg-gradient"></div>
+
+    <!-- 粒子交互层 -->
+    <canvas id="token-network"></canvas>
+
+    <!-- 主视觉内容 -->
+    <div class="hero-container">
+        <div class="brand-core">
+            <div class="core-glow"></div>
+            <h1 class="title-02">02<span class="domain-ext">.ai</span></h1>
+        </div>
+        <div class="tagline">词元 · 智能时代的新基石</div>
+        <div class="description">
+            大模型处理信息的最小单元。<br>
+            从算力消耗到智能涌现，这里是 <span class="highlight">“词元经济”</span> 的起点。<br>
+            重塑未来，构建全新的全球数字价值体系。
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('token-network');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles =[];
+        
+        // 鼠标位置对象
+        const mouse = {
+            x: null,
+            y: null,
+            radius: 150 // 鼠标吸引半径
+        };
+
+        // 监听鼠标移动（让鼠标事件作用于 window 上，因为上层 div 设置了 pointer-events: none）
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+        
+        // 鼠标移出屏幕
+        window.addEventListener('mouseout', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class TokenNode {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.baseX = this.x;
+                this.baseY = this.y;
+                this.size = Math.random() * 2 + 1;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.color = Math.random() > 0.5 ? '#ff007f' : '#00f0ff'; // 粉色与蓝色节点交错
+            }
+
+            update() {
+                // 基础漂浮运动
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // 边界反弹
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                // 鼠标交互：引力效果
+                if (mouse.x != null && mouse.y != null) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < mouse.radius) {
+                        // 距离越近，引力越大，节点向鼠标靠拢
+                        const forceDirectionX = dx / distance;
+                        const forceDirectionY = dy / distance;
+                        const force = (mouse.radius - distance) / mouse.radius;
+                        
+                        this.x += forceDirectionX * force * 2;
+                        this.y += forceDirectionY * force * 2;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+
+        // 初始化 120 个词元节点
+        for (let i = 0; i < 120; i++) {
+            particles.push(new TokenNode());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // 绘制节点并更新位置
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            
+            // 绘制“词元”之间的连接线，形成神经网络感
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 100) {
+                        // 根据距离计算连线的透明度
+                        const opacity = 1 - (dist / 100);
+                        // 创建渐变连线（或者纯色透明连线）
+                        ctx.strokeStyle = `rgba(112, 0, 255, ${opacity * 0.8})`; 
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+    </script>
+</body>
+</html>
