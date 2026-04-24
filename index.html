@@ -1,955 +1,675 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>02.ai — 从 Bit 到词元，从数字化到智能化</title>
-<style>
-  /* ===== Reset & Base ===== */
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --bg-dark: #08090c;
-    --bg-section: #0d0f14;
-    --accent-blue: #3b82f6;
-    --accent-cyan: #06b6d4;
-    --accent-purple: #8b5cf6;
-    --accent-green: #10b981;
-    --accent-orange: #f59e0b;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --gradient-main: linear-gradient(135deg, #3b82f6, #8b5cf6, #06b6d4);
-    --gradient-warm: linear-gradient(135deg, #f59e0b, #ef4444, #ec4899);
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  }
-
-  html { scroll-behavior: smooth; font-size: 16px; }
-
-  body {
-    font-family: var(--font-sans);
-    background: var(--bg-dark);
-    color: var(--text-primary);
-    line-height: 1.7;
-    overflow-x: hidden;
-  }
-
-  /* ===== Utility ===== */
-  .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
-  .text-gradient {
-    background: var(--gradient-main);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .text-gradient-warm {
-    background: var(--gradient-warm);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  /* ===== Navigation ===== */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    background: rgba(8, 9, 12, 0.72);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-  }
-  nav .container {
-    display: flex; justify-content: space-between; align-items: center;
-    height: 64px;
-  }
-  .nav-logo {
-    font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em;
-    text-decoration: none; color: var(--text-primary);
-  }
-  .nav-logo span { color: var(--accent-blue); }
-  .nav-links { display: flex; gap: 2rem; list-style: none; }
-  .nav-links a {
-    color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;
-    font-weight: 500; transition: color .2s;
-  }
-  .nav-links a:hover { color: var(--text-primary); }
-
-  /* ===== Hero ===== */
-  .hero {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    position: relative; overflow: hidden;
-    padding-top: 64px;
-  }
-  .hero-bg {
-    position: absolute; inset: 0; z-index: 0;
-  }
-  .hero-bg::before {
-    content: ''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(59,130,246,0.12) 0%, transparent 70%),
-                radial-gradient(ellipse 60% 50% at 70% 60%, rgba(139,92,246,0.08) 0%, transparent 60%);
-  }
-
-  /* floating binary digits */
-  .binary-rain {
-    position: absolute; inset: 0; overflow: hidden; opacity: 0.06;
-    font-family: var(--font-mono); font-size: 14px; color: var(--accent-blue);
-    user-select: none; pointer-events: none;
-  }
-  .binary-col {
-    position: absolute; top: -100%; animation: rain linear infinite;
-    white-space: pre-line; line-height: 1.6;
-  }
-
-  @keyframes rain {
-    to { transform: translateY(calc(200vh + 100%)); }
-  }
-
-  .hero-content {
-    position: relative; z-index: 1; text-align: center;
-    max-width: 900px; padding: 2rem;
-  }
-  .hero-eyebrow {
-    display: inline-flex; align-items: center; gap: .5rem;
-    padding: .4rem 1rem; border-radius: 100px;
-    background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
-    font-size: 0.85rem; font-weight: 600; color: var(--accent-blue);
-    margin-bottom: 2rem; letter-spacing: 0.05em;
-  }
-  .hero-eyebrow .dot {
-    width: 6px; height: 6px; border-radius: 50%; background: var(--accent-green);
-    animation: pulse-dot 2s ease-in-out infinite;
-  }
-  @keyframes pulse-dot { 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
-
-  .hero h1 {
-    font-size: clamp(3rem, 7vw, 6rem);
-    font-weight: 900; line-height: 1.08;
-    letter-spacing: -0.04em; margin-bottom: 1.5rem;
-  }
-  .hero h1 .line2 { display: block; margin-top: .2em; }
-  .hero .subtitle {
-    font-size: clamp(1.1rem, 2.2vw, 1.45rem);
-    color: var(--text-secondary); max-width: 640px; margin: 0 auto 3rem;
-    font-weight: 400; line-height: 1.7;
-  }
-
-  /* ===== Number Reveal ===== */
-  .number-reveal {
-    display: flex; justify-content: center; align-items: stretch; gap: 3rem;
-    margin-top: 3.5rem; flex-wrap: wrap;
-  }
-  .epoch-card {
-    flex: 1; min-width: 280px; max-width: 400px;
-    border-radius: 20px; padding: 2.5rem 2rem;
-    position: relative; overflow: hidden;
-    transition: transform .3s, box-shadow .3s;
-  }
-  .epoch-card:hover { transform: translateY(-6px); }
-
-  .epoch-card.era-01 {
-    background: linear-gradient(160deg, rgba(100,116,139,0.15), rgba(30,41,59,0.4));
-    border: 1px solid rgba(100,116,139,0.2);
-  }
-  .epoch-card.era-02 {
-    background: linear-gradient(160deg, rgba(59,130,246,0.15), rgba(139,92,246,0.18));
-    border: 1px solid rgba(59,130,246,0.25);
-    box-shadow: 0 0 60px rgba(59,130,246,0.08);
-  }
-
-  .epoch-number {
-    font-size: 5rem; font-weight: 900; line-height: 1;
-    font-family: var(--font-mono); letter-spacing: -0.05em;
-    margin-bottom: .5rem;
-  }
-  .era-01 .epoch-number { color: var(--text-muted); }
-  .era-02 .epoch-number { background: var(--gradient-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-
-  .epoch-unit {
-    font-size: 1.6rem; font-weight: 700;
-    margin-bottom: .3rem;
-  }
-  .epoch-unit-sub {
-    font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1rem;
-  }
-  .epoch-desc {
-    font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7;
-  }
-  .epoch-tag {
-    display: inline-block; margin-top: 1.2rem; padding: .3rem .9rem;
-    border-radius: 6px; font-size: .8rem; font-weight: 600;
-    letter-spacing: 0.04em;
-  }
-  .era-01 .epoch-tag { background: rgba(100,116,139,0.2); color: var(--text-muted); }
-  .era-02 .epoch-tag { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
-
-  /* ===== Section: 什么是词元 ===== */
-  section { padding: 7rem 0; }
-
-  .section-label {
-    display: inline-flex; align-items: center; gap: .5rem;
-    font-size: 0.82rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.12em; color: var(--accent-cyan); margin-bottom: 1.2rem;
-  }
-  .section-label::before {
-    content: ''; width: 24px; height: 2px; background: var(--accent-cyan); border-radius: 2px;
-  }
-
-  .section-title {
-    font-size: clamp(2rem, 4.5vw, 3.2rem); font-weight: 800;
-    letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 1.5rem;
-  }
-  .section-desc {
-    font-size: 1.08rem; color: var(--text-secondary); max-width: 680px;
-    line-height: 1.8;
-  }
-
-  /* Token Demo */
-  .token-demo-section {
-    background: var(--bg-section);
-    border-top: 1px solid rgba(255,255,255,0.04);
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-  }
-
-  .token-demo-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 4rem;
-    align-items: center; margin-top: 3rem;
-  }
-
-  .token-visual {
-    background: rgba(15,23,42,0.6);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 16px; padding: 2rem;
-  }
-  .token-input-label {
-    font-size: .8rem; color: var(--text-muted); text-transform: uppercase;
-    letter-spacing: .1em; margin-bottom: .8rem; font-weight: 600;
-  }
-  .token-sentence {
-    font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem;
-    line-height: 1.6;
-  }
-  .token-arrow {
-    text-align: center; color: var(--text-muted); font-size: 1.2rem;
-    margin-bottom: 1rem;
-  }
-  .token-chips {
-    display: flex; flex-wrap: wrap; gap: .6rem;
-  }
-  .token-chip {
-    display: inline-flex; align-items: center; justify-content: center;
-    padding: .55rem 1rem; border-radius: 10px; font-weight: 600;
-    font-size: 1.05rem; position: relative;
-    animation: chip-in .5s ease backwards;
-  }
-  .token-chip:nth-child(1) { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); animation-delay: .1s; }
-  .token-chip:nth-child(2) { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); animation-delay: .2s; }
-  .token-chip:nth-child(3) { background: rgba(6,182,212,0.15); color: #22d3ee; border: 1px solid rgba(6,182,212,0.3); animation-delay: .3s; }
-  .token-chip:nth-child(4) { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); animation-delay: .4s; }
-  .token-chip:nth-child(5) { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); animation-delay: .5s; }
-  .token-chip:nth-child(6) { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); animation-delay: .6s; }
-  @keyframes chip-in { from { opacity:0; transform: translateY(8px) scale(.9); } }
-
-  .token-count {
-    margin-top: 1rem; text-align: right;
-    font-family: var(--font-mono); font-size: .85rem; color: var(--text-muted);
-  }
-  .token-count strong { color: var(--accent-blue); font-size: 1.1rem; }
-
-  /* right side explanations */
-  .explain-list { list-style: none; }
-  .explain-item {
-    display: flex; gap: 1rem; margin-bottom: 2rem;
-    align-items: flex-start;
-  }
-  .explain-icon {
-    flex-shrink: 0; width: 44px; height: 44px;
-    border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    font-size: 1.2rem; font-weight: 800;
-  }
-  .explain-icon.blue { background: rgba(59,130,246,0.12); color: var(--accent-blue); }
-  .explain-icon.purple { background: rgba(139,92,246,0.12); color: var(--accent-purple); }
-  .explain-icon.cyan { background: rgba(6,182,212,0.12); color: var(--accent-cyan); }
-  .explain-title { font-weight: 700; font-size: 1.05rem; margin-bottom: .3rem; }
-  .explain-text { font-size: .92rem; color: var(--text-secondary); line-height: 1.7; }
-
-  /* ===== Timeline ===== */
-  .timeline-section { position: relative; }
-  .timeline {
-    position: relative; margin-top: 3rem;
-    padding-left: 2rem;
-  }
-  .timeline::before {
-    content: ''; position: absolute; left: 7px; top: 0; bottom: 0;
-    width: 2px;
-    background: linear-gradient(to bottom, var(--accent-blue), var(--accent-purple), var(--accent-cyan));
-    border-radius: 2px;
-  }
-  .timeline-item {
-    position: relative; margin-bottom: 2.5rem; padding-left: 2rem;
-  }
-  .timeline-item::before {
-    content: ''; position: absolute; left: -2rem; top: 6px;
-    width: 16px; height: 16px; border-radius: 50%;
-    border: 3px solid var(--accent-blue);
-    background: var(--bg-dark);
-  }
-  .timeline-item:nth-child(2)::before { border-color: var(--accent-purple); }
-  .timeline-item:nth-child(3)::before { border-color: var(--accent-cyan); }
-  .timeline-item:nth-child(4)::before { border-color: var(--accent-green); }
-  .timeline-item:nth-child(5)::before { border-color: var(--accent-orange); }
-
-  .timeline-date {
-    font-family: var(--font-mono); font-size: .82rem;
-    color: var(--accent-blue); font-weight: 700; margin-bottom: .3rem;
-    letter-spacing: .03em;
-  }
-  .timeline-item:nth-child(2) .timeline-date { color: var(--accent-purple); }
-  .timeline-item:nth-child(3) .timeline-date { color: var(--accent-cyan); }
-  .timeline-item:nth-child(4) .timeline-date { color: var(--accent-green); }
-  .timeline-item:nth-child(5) .timeline-date { color: var(--accent-orange); }
-
-  .timeline-title { font-weight: 700; font-size: 1.1rem; margin-bottom: .3rem; }
-  .timeline-desc { font-size: .92rem; color: var(--text-secondary); line-height: 1.7; }
-
-  /* ===== Core Concept: 01 → 02 ===== */
-  .evolution-section {
-    background: var(--bg-section);
-    border-top: 1px solid rgba(255,255,255,0.04);
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    overflow: hidden; position: relative;
-  }
-  .evolution-section::before {
-    content: ''; position: absolute; top: 0; right: 0;
-    width: 500px; height: 500px;
-    background: radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .evo-grid {
-    display: grid; grid-template-columns: 1fr auto 1fr; gap: 2rem;
-    align-items: center; margin-top: 3rem;
-  }
-
-  .evo-card {
-    border-radius: 20px; padding: 3rem 2.5rem; position: relative;
-    overflow: hidden;
-  }
-  .evo-card.past {
-    background: linear-gradient(160deg, rgba(30,41,59,0.5), rgba(15,23,42,0.5));
-    border: 1px solid rgba(100,116,139,0.15);
-  }
-  .evo-card.future {
-    background: linear-gradient(160deg, rgba(59,130,246,0.08), rgba(139,92,246,0.1));
-    border: 1px solid rgba(59,130,246,0.2);
-    box-shadow: 0 0 80px rgba(59,130,246,0.06);
-  }
-  .evo-card.future::after {
-    content: ''; position: absolute; inset: 0;
-    background: radial-gradient(circle at 80% 20%, rgba(59,130,246,0.08) 0%, transparent 50%);
-    pointer-events: none;
-  }
-
-  .evo-era {
-    font-family: var(--font-mono); font-size: 3.5rem; font-weight: 900;
-    margin-bottom: .5rem; letter-spacing: -0.04em;
-  }
-  .past .evo-era { color: var(--text-muted); }
-  .future .evo-era {
-    background: var(--gradient-main);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-
-  .evo-keyword { font-size: 1.8rem; font-weight: 800; margin-bottom: .3rem; }
-  .evo-keyword-en { font-size: 1rem; color: var(--text-muted); margin-bottom: 1.2rem; font-family: var(--font-mono); }
-  .evo-detail { font-size: .95rem; color: var(--text-secondary); line-height: 1.8; }
-  .evo-detail li { margin-bottom: .5rem; list-style: none; }
-  .evo-detail li::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: .6rem; vertical-align: middle; }
-  .past .evo-detail li::before { background: var(--text-muted); }
-  .future .evo-detail li::before { background: var(--accent-blue); }
-
-  .evo-arrow {
-    display: flex; flex-direction: column; align-items: center; gap: .8rem;
-    color: var(--text-muted);
-  }
-  .evo-arrow-icon {
-    font-size: 2.5rem; line-height: 1;
-    background: var(--gradient-main);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    animation: arrow-pulse 2s ease-in-out infinite;
-  }
-  @keyframes arrow-pulse { 0%,100% { transform: translateX(0); } 50% { transform: translateX(6px); } }
-  .evo-arrow-text { font-size: .8rem; writing-mode: vertical-lr; letter-spacing: .1em; font-weight: 600; }
-
-  /* ===== Stats ===== */
-  .stats-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;
-    margin-top: 3rem;
-  }
-  .stat-card {
-    background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 16px; padding: 2rem; text-align: center;
-    transition: border-color .3s, box-shadow .3s;
-  }
-  .stat-card:hover { border-color: rgba(59,130,246,0.3); box-shadow: 0 0 30px rgba(59,130,246,0.05); }
-  .stat-number {
-    font-size: 2.8rem; font-weight: 900; font-family: var(--font-mono);
-    letter-spacing: -0.03em; margin-bottom: .3rem;
-  }
-  .stat-label { font-size: .92rem; color: var(--text-secondary); font-weight: 500; }
-  .stat-sub { font-size: .78rem; color: var(--text-muted); margin-top: .5rem; }
-
-  /* ===== Why 词元 ===== */
-  .why-grid {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;
-    margin-top: 3rem;
-  }
-  .why-card {
-    background: rgba(15,23,42,0.4); border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 16px; padding: 2rem; transition: border-color .3s;
-  }
-  .why-card:hover { border-color: rgba(139,92,246,0.3); }
-  .why-card-header { display: flex; align-items: center; gap: .8rem; margin-bottom: 1rem; }
-  .why-card-icon {
-    width: 40px; height: 40px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; font-weight: 800;
-  }
-  .why-card-title { font-weight: 700; font-size: 1.05rem; }
-  .why-card-text { font-size: .92rem; color: var(--text-secondary); line-height: 1.7; }
-
-  /* ===== Comparison Table ===== */
-  .compare-table-wrap {
-    margin-top: 3rem; overflow-x: auto;
-  }
-  .compare-table {
-    width: 100%; border-collapse: separate; border-spacing: 0;
-    border-radius: 16px; overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.06);
-  }
-  .compare-table th, .compare-table td {
-    padding: 1rem 1.5rem; text-align: left;
-  }
-  .compare-table thead th {
-    background: rgba(30,41,59,0.5); font-weight: 700; font-size: .9rem;
-    text-transform: uppercase; letter-spacing: .06em; color: var(--text-secondary);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-  }
-  .compare-table tbody td {
-    background: rgba(15,23,42,0.3);
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-    font-size: .92rem; color: var(--text-secondary);
-  }
-  .compare-table tbody tr:last-child td { border-bottom: none; }
-  .compare-table tbody td:first-child { font-weight: 600; color: var(--text-primary); }
-  .compare-table .highlight-col {
-    background: rgba(59,130,246,0.06) !important;
-    color: var(--text-primary) !important; font-weight: 500;
-  }
-
-  /* ===== Quote / CTA ===== */
-  .quote-section {
-    background: var(--bg-section);
-    border-top: 1px solid rgba(255,255,255,0.04);
-    text-align: center;
-  }
-  .quote-block {
-    max-width: 800px; margin: 0 auto;
-    font-size: clamp(1.3rem, 3vw, 2rem); font-weight: 700;
-    line-height: 1.5; letter-spacing: -0.02em;
-  }
-  .quote-attr {
-    margin-top: 1.5rem; font-size: .9rem; color: var(--text-muted);
-  }
-
-  .cta-section { text-align: center; }
-  .cta-big-text {
-    font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 900;
-    letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 1.5rem;
-  }
-  .cta-sub {
-    font-size: 1.1rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 2.5rem;
-    line-height: 1.7;
-  }
-  .cta-btn {
-    display: inline-flex; align-items: center; gap: .5rem;
-    padding: .9rem 2.5rem; border-radius: 12px;
-    background: var(--gradient-main); color: #fff;
-    font-size: 1rem; font-weight: 700; text-decoration: none;
-    border: none; cursor: pointer;
-    transition: transform .2s, box-shadow .2s;
-    box-shadow: 0 4px 24px rgba(59,130,246,0.25);
-  }
-  .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(59,130,246,0.35); }
-
-  /* ===== Footer ===== */
-  footer {
-    padding: 3rem 0; text-align: center;
-    border-top: 1px solid rgba(255,255,255,0.04);
-  }
-  footer p { font-size: .85rem; color: var(--text-muted); }
-  footer .footer-logo {
-    font-size: 1.3rem; font-weight: 800; margin-bottom: .5rem;
-    color: var(--text-primary);
-  }
-  footer .footer-logo span { color: var(--accent-blue); }
-
-  /* ===== Responsive ===== */
-  @media (max-width: 900px) {
-    .token-demo-grid { grid-template-columns: 1fr; gap: 2rem; }
-    .evo-grid { grid-template-columns: 1fr; }
-    .evo-arrow { flex-direction: row; }
-    .evo-arrow-icon { transform: rotate(90deg); }
-    .evo-arrow-text { writing-mode: horizontal-tb; }
-    .stats-grid { grid-template-columns: 1fr; }
-    .why-grid { grid-template-columns: 1fr; }
-    .number-reveal { flex-direction: column; align-items: center; }
-    .nav-links { display: none; }
-  }
-
-  /* ===== Animations ===== */
-  .fade-up {
-    opacity: 0; transform: translateY(30px);
-    transition: opacity .7s ease, transform .7s ease;
-  }
-  .fade-up.visible { opacity: 1; transform: translateY(0); }
-</style>
-</head>
-<body>
-
-<!-- ===== NAV ===== -->
-<nav>
-  <div class="container">
-    <a href="#" class="nav-logo"><span>02</span>.ai</a>
-    <ul class="nav-links">
-      <li><a href="#what">什么是词元</a></li>
-      <li><a href="#evolution">01 → 02</a></li>
-      <li><a href="#timeline">时间线</a></li>
-      <li><a href="#data">数据</a></li>
-      <li><a href="#why">为什么是词元</a></li>
-    </ul>
-  </div>
-</nav>
-
-<!-- ===== HERO ===== -->
-<section class="hero">
-  <div class="hero-bg">
-    <div class="binary-rain" id="binaryRain"></div>
-  </div>
-  <div class="hero-content">
-    <div class="hero-eyebrow">
-      <span class="dot"></span>
-      The Next Unit of Intelligence
-    </div>
-    <h1>
-      <span class="text-gradient">01</span> 是 Bit
-      <span class="line2"><span class="text-gradient">02</span> 是词元</span>
-    </h1>
-    <p class="subtitle">
-      如果说 <strong>Bit</strong> 定义了数字化时代的基本单位，那么 <strong>词元（Token）</strong>正在定义智能化时代的新刻度。<br>
-      从 0 和 1 的排列，到语义的理解与生成——我们正站在文明计算范式的转折点。
-    </p>
-
-    <div class="number-reveal">
-      <div class="epoch-card era-01">
-        <div class="epoch-number">01</div>
-        <div class="epoch-unit">Bit · 比特</div>
-        <div class="epoch-unit-sub">Binary Digit</div>
-        <div class="epoch-desc">
-          信息论之父 Claude Shannon 于1948年定义。<br>
-          0 或 1，一切数字世界的原点。<br>
-          它度量的是<strong>信息</strong>——存储、传输、编码。
-        </div>
-        <span class="epoch-tag">数字化时代 · 1948—</span>
-      </div>
-      <div class="epoch-card era-02">
-        <div class="epoch-number">02</div>
-        <div class="epoch-unit">Token · 词元</div>
-        <div class="epoch-unit-sub">The Atomic Unit of Intelligence</div>
-        <div class="epoch-desc">
-          2026年3月，中国正式定名。<br>
-          大模型处理和生成语言的最小单元。<br>
-          它度量的是<strong>智能</strong>——理解、推理、创造。
-        </div>
-        <span class="epoch-tag">智能化时代 · 2026—</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 什么是词元 ===== -->
-<section class="token-demo-section" id="what">
-  <div class="container">
-    <div class="section-label">Understanding Token</div>
-    <h2 class="section-title">什么是<span class="text-gradient">词元</span>？</h2>
-    <p class="section-desc">
-      词元是大语言模型处理信息的最小单元，也是 AI 服务的计费基础。你说的每一句话，AI 生成的每一段文字，都被拆解为词元进行计算。
-    </p>
-
-    <div class="token-demo-grid fade-up">
-      <div class="token-visual">
-        <div class="token-input-label">INPUT · 输入文本</div>
-        <div class="token-sentence">"人工智能正在改变世界"</div>
-        <div class="token-arrow">&#8595; Tokenization 分词 &#8595;</div>
-        <div class="token-chips">
-          <span class="token-chip">人工</span>
-          <span class="token-chip">智能</span>
-          <span class="token-chip">正在</span>
-          <span class="token-chip">改变</span>
-          <span class="token-chip">世界</span>
-        </div>
-        <div class="token-count">共 <strong>5</strong> 个词元（Tokens）</div>
-
-        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.06);">
-          <div class="token-input-label">ANOTHER EXAMPLE · 另一个例子</div>
-          <div class="token-sentence" style="font-size:1.3rem;">"我爱中国！"</div>
-          <div class="token-arrow">&#8595;</div>
-          <div class="token-chips">
-            <span class="token-chip">我</span>
-            <span class="token-chip">爱</span>
-            <span class="token-chip">中国</span>
-            <span class="token-chip">！</span>
-          </div>
-          <div class="token-count">共 <strong>4</strong> 个词元</div>
-        </div>
-      </div>
-
-      <ul class="explain-list">
-        <li class="explain-item">
-          <div class="explain-icon blue">词</div>
-          <div>
-            <div class="explain-title">语言的原子</div>
-            <div class="explain-text">词元不是传统意义上的"字"或"词"，而是模型根据语料统计学习出的最优分割单位。中文、英文、代码，都以词元为粒度进行处理。</div>
-          </div>
-        </li>
-        <li class="explain-item">
-          <div class="explain-icon purple">量</div>
-          <div>
-            <div class="explain-title">智能的刻度</div>
-            <div class="explain-text">词元是衡量 AI 消耗的度量衡——就像用电有"度"，用水有"吨"，用 AI 有"词元"。它是智能经济的基础计量单位。</div>
-          </div>
-        </li>
-        <li class="explain-item">
-          <div class="explain-icon cyan">￥</div>
-          <div>
-            <div class="explain-title">成本已极低</div>
-            <div class="explain-text">词元价格已大幅下降。如今花 <strong>1 元钱</strong>，大约可以让 AI 写出 <strong>1000 篇 800 字的作文</strong>，智能触手可及。</div>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 01 → 02 Evolution ===== -->
-<section class="evolution-section" id="evolution">
-  <div class="container">
-    <div class="section-label">Paradigm Shift</div>
-    <h2 class="section-title">从 <span class="text-gradient">01</span> 到 <span class="text-gradient">02</span>：计算范式的跃迁</h2>
-    <p class="section-desc">
-      如果说 20 世纪属于 Bit，那么 21 世纪属于 Token。这不是简单的术语更迭，而是人类与计算关系的根本转变。
-    </p>
-
-    <div class="evo-grid fade-up">
-      <div class="evo-card past">
-        <div class="evo-era">01</div>
-        <div class="evo-keyword">Bit · 比特</div>
-        <div class="evo-keyword-en">Binary Digit — since 1948</div>
-        <ul class="evo-detail">
-          <li>信息的最小单位：0 或 1</li>
-          <li>度量的是<strong>数据</strong>——存储量、传输速率</li>
-          <li>驱动了互联网、移动通信、云计算</li>
-          <li>核心命题：如何高效地<strong>搬运和存储</strong>信息</li>
-          <li>基础设施：光缆、基站、数据中心</li>
-          <li>产业语言：带宽、流量、存储空间</li>
-        </ul>
-      </div>
-
-      <div class="evo-arrow">
-        <span class="evo-arrow-icon">&#10132;</span>
-        <span class="evo-arrow-text">范式跃迁</span>
-      </div>
-
-      <div class="evo-card future">
-        <div class="evo-era">02</div>
-        <div class="evo-keyword">Token · 词元</div>
-        <div class="evo-keyword-en">The Atomic Unit of Intelligence — since 2026</div>
-        <ul class="evo-detail">
-          <li>智能的最小单位：语义片段</li>
-          <li>度量的是<strong>智能</strong>——理解力、推理力、创造力</li>
-          <li>驱动着大模型、AI Agent、具身智能</li>
-          <li>核心命题：如何高效地<strong>理解和生成</strong>知识</li>
-          <li>基础设施：GPU 集群、智算中心、词元工厂</li>
-          <li>产业语言：词元价格、上下文窗口、推理效率</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Comparison Table -->
-    <div class="compare-table-wrap fade-up" style="margin-top: 4rem;">
-      <table class="compare-table">
-        <thead>
-          <tr>
-            <th>维度</th>
-            <th>01 · Bit 时代</th>
-            <th class="highlight-col">02 · Token 时代</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>基本单位</td>
-            <td>Bit（比特）</td>
-            <td class="highlight-col">Token（词元）</td>
-          </tr>
-          <tr>
-            <td>度量对象</td>
-            <td>信息量</td>
-            <td class="highlight-col">智能量</td>
-          </tr>
-          <tr>
-            <td>核心能力</td>
-            <td>存储 & 传输</td>
-            <td class="highlight-col">理解 & 生成</td>
-          </tr>
-          <tr>
-            <td>商业模式</td>
-            <td>按流量/存储计费</td>
-            <td class="highlight-col">按词元调用计费</td>
-          </tr>
-          <tr>
-            <td>类比</td>
-            <td>水电表的"度"</td>
-            <td class="highlight-col">智能表的"词元"</td>
-          </tr>
-          <tr>
-            <td>基础设施</td>
-            <td>光缆 · 基站 · IDC</td>
-            <td class="highlight-col">GPU 集群 · 智算中心</td>
-          </tr>
-          <tr>
-            <td>产业形态</td>
-            <td>数字经济</td>
-            <td class="highlight-col">词元经济</td>
-          </tr>
-          <tr>
-            <td>定义时刻</td>
-            <td>1948 · Shannon</td>
-            <td class="highlight-col">2026 · 中国正式定名</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-<!-- ===== Timeline ===== -->
-<section class="timeline-section" id="timeline">
-  <div class="container">
-    <div class="section-label">Milestones</div>
-    <h2 class="section-title">"词元"定名 <span class="text-gradient">关键时间线</span></h2>
-    <p class="section-desc">从学术先行到官方定名，一个名字如何重塑一个产业。</p>
-
-    <div class="timeline fade-up">
-      <div class="timeline-item">
-        <div class="timeline-date">2021</div>
-        <div class="timeline-title">学术奠基</div>
-        <div class="timeline-desc">
-          复旦大学邱锡鹏教授开始在教材中使用"词元"作为 Token 的中文译名，为该术语在学术界的传播奠定了基础。计算语言学中 Token 的概念可追溯至 20 世纪初的 type-token 区分。
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-date">2026.03.23</div>
-        <div class="timeline-title">官方首次使用</div>
-        <div class="timeline-desc">
-          中国发展高层论坛年会上，国家数据局局长刘烈宏首次在官方场合使用"词元"作为 Token 的中文译名，并将其定位为 AI 产业的"结算单位"。
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-date">2026.03.24</div>
-        <div class="timeline-title">数据引爆</div>
-        <div class="timeline-desc">
-          国新办发布会上公布里程碑数据：我国日均词元调用量突破 <strong>140 万亿</strong>，两年增长超 <strong>1000 倍</strong>。这一数据成为"词元"进入大众视野的关键引爆点。
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-date">2026.03.25</div>
-        <div class="timeline-title">权威认可</div>
-        <div class="timeline-desc">
-          全国科学技术名词审定委员会发布公告，优先推荐"词元"作为 Token 的规范中文名，标志着其获得官方权威机构的正式认可，结束了此前"代币""令牌"等多种译名混用的局面。
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-date">2026.04 →</div>
-        <div class="timeline-title">词元经济启动</div>
-        <div class="timeline-desc">
-          "词元经济"概念迅速兴起。中国 AI 大模型周调用量连续多周超越美国，券商纷纷发布研报掘金"词元经济"投资主线，联想等企业推出"词元工厂"产品方案，多家企业抢注相关商标。
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== Stats ===== -->
-<section id="data" style="background: var(--bg-section); border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04);">
-  <div class="container">
-    <div class="section-label">By the Numbers</div>
-    <h2 class="section-title">词元经济的 <span class="text-gradient">爆发数据</span></h2>
-
-    <div class="stats-grid fade-up">
-      <div class="stat-card">
-        <div class="stat-number text-gradient">140万亿</div>
-        <div class="stat-label">日均词元调用量</div>
-        <div class="stat-sub">截至 2026 年 3 月 · 中国市场</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number text-gradient-warm">1000x</div>
-        <div class="stat-label">两年增长倍数</div>
-        <div class="stat-sub">从 2024 年至今的爆发式增长</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number text-gradient">1元</div>
-        <div class="stat-label">≈ 1000篇800字作文</div>
-        <div class="stat-sub">词元价格已降至极低水平</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== Why 词元 ===== -->
-<section id="why">
-  <div class="container">
-    <div class="section-label">Naming</div>
-    <h2 class="section-title">为什么是 <span class="text-gradient">"词元"</span>？</h2>
-    <p class="section-desc">
-      在多个候选译名中——"模元""智元""令牌""代币"——"词元"最终脱颖而出。
-    </p>
-
-    <div class="why-grid fade-up">
-      <div class="why-card">
-        <div class="why-card-header">
-          <div class="why-card-icon" style="background: rgba(59,130,246,0.12); color: var(--accent-blue);">词</div>
-          <div class="why-card-title">"词"——语言的根源</div>
-        </div>
-        <div class="why-card-text">
-          "词"字点明了 Token 在自然语言处理中的根源。大模型的核心能力始于语言，词元的"词"直指其与语义的密切关联，简洁而精确。
-        </div>
-      </div>
-      <div class="why-card">
-        <div class="why-card-header">
-          <div class="why-card-icon" style="background: rgba(139,92,246,0.12); color: var(--accent-purple);">元</div>
-          <div class="why-card-title">"元"——基本单元</div>
-        </div>
-        <div class="why-card-text">
-          "元"传达出"基本单元"之意，与"元素""字节""像素"中的"元"保持语义一致。一个字道出了 Token 作为最小不可分粒度的本质。
-        </div>
-      </div>
-      <div class="why-card">
-        <div class="why-card-header">
-          <div class="why-card-icon" style="background: rgba(6,182,212,0.12); color: var(--accent-cyan);">&#x2717;</div>
-          <div class="why-card-title">淘汰的候选者</div>
-        </div>
-        <div class="why-card-text">
-          <strong>"模元"</strong>（清华教授提出）——突出模型核心，但与公众认知距离较远。<br>
-          <strong>"智元"</strong>（AI 媒体力推）——强调智能，但语义过于宏大，容易泛化。<br>
-          <strong>"代币""令牌"</strong>——在区块链、网络安全领域早有所指，容易造成跨领域混淆。
-        </div>
-      </div>
-      <div class="why-card">
-        <div class="why-card-header">
-          <div class="why-card-icon" style="background: rgba(16,185,129,0.12); color: var(--accent-green);">&#10003;</div>
-          <div class="why-card-title">官方定调的智慧</div>
-        </div>
-        <div class="why-card-text">
-          国家数据局最终选择"词元"，因其足够<strong>朴素、中性、不会过时</strong>。它不绑定任何特定技术路线，既适用于今天的 LLM，也能覆盖未来多模态模型的演进。这是术语命名中"少即是多"的典范。
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== Quote ===== -->
-<section class="quote-section">
-  <div class="container">
-    <blockquote class="quote-block fade-up">
-      "<span class="text-gradient">Bit 让机器记住了世界，<br>Token 让机器理解了世界。</span>"
-    </blockquote>
-    <p class="quote-attr">—— 02.ai 对两个时代的注解</p>
-  </div>
-</section>
-
-<!-- ===== CTA ===== -->
-<section class="cta-section">
-  <div class="container">
-    <h2 class="cta-big-text fade-up">
-      <span class="text-gradient">02</span>.ai
-    </h2>
-    <p class="cta-sub fade-up">
-      我们相信，正如 Bit 开启了数字文明，词元正在开启智能文明。<br>
-      <strong>02.ai</strong> —— 站在从 01 到 02 的范式转折点上。
-    </p>
-    <a href="#" class="cta-btn fade-up">
-      进入词元时代 &#8594;
-    </a>
-  </div>
-</section>
-
-<!-- ===== Footer ===== -->
-<footer>
-  <div class="container">
-    <div class="footer-logo"><span>02</span>.ai</div>
-    <p>01 is Bit. 02 is Token. The next unit of intelligence.</p>
-    <p style="margin-top: .5rem;">&copy; 2026 02.ai &mdash; All Rights Reserved</p>
-  </div>
-</footer>
-
-<!-- ===== Scripts ===== -->
-<script>
-// Binary rain background
-(function() {
-  const container = document.getElementById('binaryRain');
-  const cols = 30;
-  for (let i = 0; i < cols; i++) {
-    const col = document.createElement('div');
-    col.className = 'binary-col';
-    col.style.left = (i / cols * 100) + '%';
-    col.style.animationDuration = (12 + Math.random() * 20) + 's';
-    col.style.animationDelay = (-Math.random() * 20) + 's';
-    let text = '';
-    const lines = 40 + Math.floor(Math.random() * 30);
-    for (let j = 0; j < lines; j++) {
-      // Mix of binary and token-related characters
-      const r = Math.random();
-      if (r < 0.6) text += Math.round(Math.random());
-      else if (r < 0.75) text += ['词','元','T','o','k','e','n'][Math.floor(Math.random()*7)];
-      else text += ' ';
-      if (Math.random() < 0.15) text += '\n';
-    }
-    col.textContent = text;
-    container.appendChild(col);
-  }
-})();
-
-// Intersection Observer for fade-up animations
-(function() {
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>02.ai｜词元 Token</title>
+    <meta
+      name="description"
+      content="01 是 bit，是数字化；02 是 token，是词元，是智能化。02.ai 以词元重新理解智能时代的创造、计算与价值。"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #05070c;
+        --panel: rgba(255, 255, 255, 0.075);
+        --panel-strong: rgba(255, 255, 255, 0.12);
+        --line: rgba(255, 255, 255, 0.16);
+        --text: #f7f8ff;
+        --muted: rgba(247, 248, 255, 0.68);
+        --soft: rgba(247, 248, 255, 0.45);
+        --blue: #74d6ff;
+        --violet: #a78bfa;
+        --green: #72f1b8;
+        --orange: #ffb86b;
+        --shadow: 0 28px 120px rgba(0, 0, 0, 0.45);
       }
-    });
-  }, { threshold: 0.15 });
 
-  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
-})();
+      * {
+        box-sizing: border-box;
+      }
 
-// Smooth scroll for nav links
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    const target = document.querySelector(a.getAttribute('href'));
-    if (target) target.scrollIntoView({ behavior: 'smooth' });
-  });
-});
-</script>
+      html {
+        scroll-behavior: smooth;
+      }
 
-</body>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+          sans-serif;
+        background:
+          radial-gradient(circle at 18% 14%, rgba(116, 214, 255, 0.2), transparent 30%),
+          radial-gradient(circle at 78% 22%, rgba(167, 139, 250, 0.24), transparent 32%),
+          radial-gradient(circle at 52% 86%, rgba(114, 241, 184, 0.14), transparent 30%),
+          linear-gradient(135deg, #02030a 0%, #07101c 46%, #06020f 100%);
+        color: var(--text);
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+        background-size: 68px 68px;
+        mask-image: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent 78%);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .shell {
+        width: min(1180px, calc(100% - 36px));
+        margin: 0 auto;
+      }
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 0;
+        backdrop-filter: blur(18px);
+      }
+
+      .brand {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        font-weight: 780;
+        letter-spacing: -0.04em;
+      }
+
+      .mark {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(116, 214, 255, 0.18), rgba(167, 139, 250, 0.2));
+        box-shadow: inset 0 0 28px rgba(255,255,255,0.09);
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .nav-links a {
+        padding: 10px 14px;
+        border-radius: 999px;
+      }
+
+      .nav-links a:hover,
+      .pill {
+        background: var(--panel);
+        border: 1px solid var(--line);
+      }
+
+      .hero {
+        min-height: calc(100vh - 86px);
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 42px;
+        align-items: center;
+        padding: 48px 0 92px;
+      }
+
+      .eyebrow {
+        width: fit-content;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 13px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.065);
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 0 8px rgba(114, 241, 184, 0.13);
+      }
+
+      h1 {
+        margin: 28px 0 18px;
+        max-width: 860px;
+        font-size: clamp(58px, 10vw, 136px);
+        line-height: 0.9;
+        letter-spacing: -0.09em;
+      }
+
+      .gradient-text {
+        background: linear-gradient(90deg, #ffffff 0%, var(--blue) 42%, var(--violet) 78%, var(--green) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .hero-copy {
+        max-width: 720px;
+        color: var(--muted);
+        font-size: clamp(18px, 2.2vw, 25px);
+        line-height: 1.62;
+      }
+
+      .hero-copy strong {
+        color: var(--text);
+        font-weight: 680;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 34px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 0 20px;
+        border-radius: 999px;
+        font-weight: 680;
+        border: 1px solid var(--line);
+      }
+
+      .button.primary {
+        color: #031018;
+        background: linear-gradient(90deg, var(--blue), var(--green));
+        border-color: transparent;
+        box-shadow: 0 18px 48px rgba(116, 214, 255, 0.24);
+      }
+
+      .button.secondary {
+        background: var(--panel);
+        color: var(--text);
+      }
+
+      .orb-card {
+        position: relative;
+        min-height: 600px;
+        border: 1px solid var(--line);
+        border-radius: 38px;
+        background:
+          radial-gradient(circle at 50% 38%, rgba(116, 214, 255, 0.22), transparent 36%),
+          radial-gradient(circle at 68% 63%, rgba(167, 139, 250, 0.18), transparent 34%),
+          linear-gradient(160deg, rgba(255,255,255,0.13), rgba(255,255,255,0.035));
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .orb-card::before,
+      .orb-card::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(1px);
+      }
+
+      .orb-card::before {
+        width: 360px;
+        height: 360px;
+        left: 50%;
+        top: 48%;
+        transform: translate(-50%, -50%);
+        background:
+          radial-gradient(circle at 34% 28%, rgba(255,255,255,0.95), transparent 0 10%, rgba(255,255,255,0.12) 11%, transparent 34%),
+          conic-gradient(from 210deg, var(--blue), var(--violet), var(--green), var(--blue));
+        box-shadow: 0 0 90px rgba(116, 214, 255, 0.38);
+        opacity: 0.92;
+      }
+
+      .orb-card::after {
+        width: 560px;
+        height: 560px;
+        left: 50%;
+        top: 48%;
+        transform: translate(-50%, -50%);
+        border: 1px solid rgba(255,255,255,0.18);
+        background: repeating-conic-gradient(from 0deg, rgba(255,255,255,0.16) 0deg 1deg, transparent 1deg 15deg);
+        mask: radial-gradient(circle, transparent 0 46%, #000 47% 48%, transparent 49%);
+      }
+
+      .token-code {
+        position: absolute;
+        inset: auto 28px 28px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: rgba(3, 7, 15, 0.72);
+        backdrop-filter: blur(18px);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        color: var(--soft);
+      }
+
+      .token-code span {
+        color: var(--green);
+      }
+
+      .floating {
+        position: absolute;
+        z-index: 2;
+        display: grid;
+        gap: 4px;
+        min-width: 148px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(16px);
+      }
+
+      .floating b {
+        font-size: 28px;
+      }
+
+      .floating small {
+        color: var(--muted);
+      }
+
+      .floating.one { left: 26px; top: 34px; }
+      .floating.two { right: 24px; top: 112px; }
+      .floating.three { left: 56px; bottom: 172px; }
+
+      section {
+        padding: 94px 0;
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        align-items: end;
+        margin-bottom: 28px;
+      }
+
+      .kicker {
+        margin: 0 0 12px;
+        color: var(--green);
+        font-size: 13px;
+        font-weight: 780;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: clamp(34px, 5vw, 72px);
+        line-height: 1.02;
+        letter-spacing: -0.065em;
+      }
+
+      .section-note {
+        max-width: 460px;
+        color: var(--muted);
+        line-height: 1.75;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+
+      .era-card,
+      .glass-card {
+        border: 1px solid var(--line);
+        border-radius: 32px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .era-card {
+        position: relative;
+        min-height: 420px;
+        padding: 32px;
+        overflow: hidden;
+      }
+
+      .era-card::after {
+        content: attr(data-watermark);
+        position: absolute;
+        right: -18px;
+        bottom: -28px;
+        font-size: 170px;
+        font-weight: 900;
+        letter-spacing: -0.12em;
+        color: rgba(255,255,255,0.05);
+      }
+
+      .era-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--muted);
+      }
+
+      .era-number {
+        font-size: 72px;
+        font-weight: 880;
+        letter-spacing: -0.08em;
+      }
+
+      .era-card h3 {
+        margin: 70px 0 16px;
+        font-size: clamp(34px, 4vw, 58px);
+        line-height: 1;
+        letter-spacing: -0.06em;
+      }
+
+      .era-card p {
+        position: relative;
+        z-index: 1;
+        max-width: 460px;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.75;
+      }
+
+      .era-card.token {
+        background:
+          radial-gradient(circle at 80% 20%, rgba(114, 241, 184, 0.22), transparent 32%),
+          radial-gradient(circle at 24% 72%, rgba(116, 214, 255, 0.2), transparent 30%),
+          var(--panel);
+      }
+
+      .grid-three {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+
+      .glass-card {
+        padding: 26px;
+      }
+
+      .glass-card .icon {
+        display: grid;
+        place-items: center;
+        width: 52px;
+        height: 52px;
+        margin-bottom: 28px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(116,214,255,0.2), rgba(114,241,184,0.18));
+        border: 1px solid var(--line);
+        font-size: 24px;
+      }
+
+      .glass-card h3 {
+        margin: 0 0 12px;
+        font-size: 24px;
+        letter-spacing: -0.04em;
+      }
+
+      .glass-card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.72;
+      }
+
+      .statement {
+        position: relative;
+        padding: 58px;
+        border-radius: 40px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15), transparent 28%),
+          linear-gradient(135deg, rgba(116,214,255,0.28), rgba(167,139,250,0.22) 48%, rgba(114,241,184,0.24));
+        box-shadow: var(--shadow);
+      }
+
+      .statement h2 {
+        max-width: 980px;
+      }
+
+      .statement p {
+        max-width: 720px;
+        margin: 22px 0 0;
+        color: rgba(255,255,255,0.76);
+        font-size: 20px;
+        line-height: 1.8;
+      }
+
+      .sources {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 26px;
+      }
+
+      .sources a {
+        padding: 9px 12px;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 999px;
+        color: rgba(255,255,255,0.76);
+        background: rgba(0,0,0,0.16);
+        font-size: 13px;
+      }
+
+      footer {
+        padding: 34px 0 48px;
+        color: var(--soft);
+        border-top: 1px solid var(--line);
+      }
+
+      @media (max-width: 900px) {
+        .nav-links {
+          display: none;
+        }
+
+        .hero,
+        .timeline,
+        .grid-three {
+          grid-template-columns: 1fr;
+        }
+
+        .hero {
+          padding-top: 28px;
+        }
+
+        .orb-card {
+          min-height: 520px;
+        }
+
+        .section-head {
+          display: block;
+        }
+
+        .section-note {
+          margin-top: 18px;
+        }
+
+        .statement {
+          padding: 34px;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .shell {
+          width: min(100% - 24px, 1180px);
+        }
+
+        .floating {
+          min-width: 120px;
+          padding: 13px;
+        }
+
+        .floating.two {
+          right: 14px;
+        }
+
+        .era-card,
+        .glass-card {
+          border-radius: 24px;
+        }
+
+        .era-card {
+          padding: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="shell nav">
+      <a class="brand" href="#top" aria-label="02.ai 首页">
+        <span class="mark">02</span>
+        <span>02.ai</span>
+      </a>
+      <nav class="nav-links" aria-label="页面导航">
+        <a href="#meaning">词元</a>
+        <a href="#shift">02 时代</a>
+        <a href="#system">智能化</a>
+        <a class="pill" href="#start">进入 02</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="shell hero" aria-labelledby="hero-title">
+        <div>
+          <div class="eyebrow"><span class="pulse"></span> Token now has a Chinese name: 词元</div>
+          <h1 id="hero-title"><span class="gradient-text">02 是词元</span><br />是智能化</h1>
+          <p class="hero-copy">
+            如果 <strong>01 是 bit</strong>，让世界被数字化；那么 <strong>02 是 token / 词元</strong>，让知识、意图、行动与价值被智能体理解、生成和协作。
+          </p>
+          <div class="actions">
+            <a class="button primary" href="#shift">看懂 01 → 02</a>
+            <a class="button secondary" href="#meaning">什么是词元</a>
+          </div>
+        </div>
+
+        <div class="orb-card" aria-label="词元视觉球体">
+          <div class="floating one"><small>digital unit</small><b>bit</b><small>0 / 1</small></div>
+          <div class="floating two"><small>AI unit</small><b>词元</b><small>token</small></div>
+          <div class="floating three"><small>next web</small><b>02.ai</b><small>智能原生</small></div>
+          <div class="token-code">
+            01.digitalize(world)<br />
+            02.intelligize(<span>tokens</span>)<br />
+            return 新的创造界面
+          </div>
+        </div>
+      </section>
+
+      <section id="meaning" class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Naming Moment</p>
+            <h2>Token，不只是技术词。<br />它正在成为智能时代的“词元”。</h2>
+          </div>
+          <p class="section-note">
+            “词元”强调 AI 将语言、代码、图像、声音与意图切分为可计算、可生成、可交换的基本单元。它既是模型的输入输出单位，也是智能协作的新界面。
+          </p>
+        </div>
+        <div class="grid-three">
+          <article class="glass-card">
+            <div class="icon">字</div>
+            <h3>语言的最小入口</h3>
+            <p>词元把自然语言转译为模型可处理的片段。每一次提问、总结、创作，都从词元开始。</p>
+          </article>
+          <article class="glass-card">
+            <div class="icon">⌁</div>
+            <h3>智能的流通单位</h3>
+            <p>在 AI 服务中，词元可用于衡量上下文、推理、生成与成本，成为智能资源的计量方式。</p>
+          </article>
+          <article class="glass-card">
+            <div class="icon">∞</div>
+            <h3>创造的新材料</h3>
+            <p>词元连接文本、代码、图像、视频和动作，让人类想法可以被智能体连续加工、组合和执行。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="shift" class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">01 → 02</p>
+            <h2>从数字化，到智能化。</h2>
+          </div>
+          <p class="section-note">
+            01 时代解决“如何把世界变成数据”；02 时代继续向前，解决“如何让数据理解意图、生成结果、自动行动”。
+          </p>
+        </div>
+        <div class="timeline">
+          <article class="era-card" data-watermark="01">
+            <div class="era-top"><span class="era-number">01</span><span>bit / 数字化</span></div>
+            <h3>世界被编码。</h3>
+            <p>bit 是数字世界的原子。它让信息被记录、复制、传输，推动软件、互联网与云计算成为现代社会的基础设施。</p>
+          </article>
+          <article class="era-card token" data-watermark="02">
+            <div class="era-top"><span class="era-number">02</span><span>token / 词元 / 智能化</span></div>
+            <h3>意图被理解。</h3>
+            <p>词元是智能世界的界面。它让模型读懂上下文，生成内容，调用工具，并把人类目标转化为可执行的智能工作流。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="system" class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">02.ai System</p>
+            <h2>以词元为核心，构建智能原生网页。</h2>
+          </div>
+          <p class="section-note">
+            02.ai 可以被表达为一个面向未来的入口：把信息、模型、工具、身份和价值组织在同一个智能界面中。
+          </p>
+        </div>
+        <div class="grid-three">
+          <article class="glass-card">
+            <div class="icon">01</div>
+            <h3>表达</h3>
+            <p>把人的想法变成可被模型理解的词元流，降低创造和决策的启动成本。</p>
+          </article>
+          <article class="glass-card">
+            <div class="icon">02</div>
+            <h3>推理</h3>
+            <p>在上下文中组合知识、任务和工具，让智能不只回答，而是持续推进目标。</p>
+          </article>
+          <article class="glass-card">
+            <div class="icon">03</div>
+            <h3>价值</h3>
+            <p>用词元衡量智能消耗、创造贡献与协作边界，形成下一代网络的价值刻度。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="start" class="shell">
+        <div class="statement">
+          <p class="kicker">02.ai Manifesto</p>
+          <h2>01 是 bit，是数字化。<br />02 是 token，是词元，是智能化。</h2>
+          <p>
+            当世界从“被连接”走向“被理解”，新的单位需要新的名字。02.ai 选择“词元”作为智能时代的起点：从一个词，到一个任务；从一次生成，到一套自动运转的智能系统。
+          </p>
+          <div class="sources" aria-label="新闻与术语参考">
+            <a href="https://www.termonline.cn/" target="_blank" rel="noreferrer">术语在线 / 全国科技名词委</a>
+            <a href="https://www.stdaily.com/" target="_blank" rel="noreferrer">科技日报相关报道</a>
+            <a href="https://www.chinanews.com.cn/" target="_blank" rel="noreferrer">中新社相关报道</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="shell">
+      <div>© 2026 02.ai — Token as 词元. Intelligence begins with the next unit.</div>
+    </footer>
+  </body>
 </html>
