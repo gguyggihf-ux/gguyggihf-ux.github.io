@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>02.ai｜词元 Token</title>
+    <title>02.ai｜词元 Token｜Two-character .ai domain</title>
     <meta
       name="description"
-      content="01 是 bit，是数字化；02 是 token，是词元，是智能化。02.ai 以词元重新理解智能时代的创造、计算与价值。"
+      content="02.ai 是一个两字符 .ai 域名。01 是 bit，是数字化；02 是 token，是词元，是智能化。面向智能原生网页、AI Agent 与下一代 token 经济入口。"
     />
     <style>
       :root {
@@ -171,6 +171,14 @@
         line-height: 1.62;
       }
 
+      .asset-line {
+        margin-top: 16px;
+        max-width: 680px;
+        color: rgba(247, 248, 255, 0.82);
+        font-size: clamp(15px, 1.45vw, 18px);
+        line-height: 1.72;
+      }
+
       .hero-copy strong {
         color: var(--text);
         font-weight: 680;
@@ -204,6 +212,11 @@
       .button.secondary {
         background: var(--panel);
         color: var(--text);
+      }
+
+      .button.ghost {
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.035);
       }
 
       .orb-card {
@@ -400,6 +413,43 @@
         gap: 18px;
       }
 
+      .asset-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+
+      .asset-chip {
+        min-height: 168px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.035)),
+          var(--panel);
+      }
+
+      .asset-chip b {
+        display: block;
+        margin-bottom: 30px;
+        color: var(--green);
+        font-size: 13px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      .asset-chip h3 {
+        margin: 0 0 10px;
+        font-size: 24px;
+        letter-spacing: -0.04em;
+      }
+
+      .asset-chip p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
       .glass-card {
         padding: 26px;
       }
@@ -467,6 +517,55 @@
         font-size: 13px;
       }
 
+      .inquiry {
+        display: grid;
+        grid-template-columns: 1fr 0.78fr;
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .inquiry-panel {
+        padding: 36px;
+        border: 1px solid var(--line);
+        border-radius: 34px;
+        background:
+          radial-gradient(circle at 82% 18%, rgba(114, 241, 184, 0.14), transparent 34%),
+          var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .inquiry-panel h2 {
+        max-width: 760px;
+      }
+
+      .inquiry-panel p {
+        max-width: 680px;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.75;
+      }
+
+      .inquiry-list {
+        display: grid;
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .inquiry-list li {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 16px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        color: var(--muted);
+      }
+
+      .inquiry-list strong {
+        color: var(--text);
+      }
+
       footer {
         padding: 34px 0 48px;
         color: var(--soft);
@@ -480,7 +579,9 @@
 
         .hero,
         .timeline,
-        .grid-three {
+        .grid-three,
+        .asset-grid,
+        .inquiry {
           grid-template-columns: 1fr;
         }
 
@@ -510,6 +611,49 @@
           width: min(100% - 24px, 1180px);
         }
 
+        .nav {
+          padding: 16px 0;
+        }
+
+        .mark {
+          width: 62px;
+          height: 62px;
+          font-size: 20px;
+        }
+
+        .brand {
+          gap: 16px;
+          font-size: 25px;
+        }
+
+        .hero {
+          min-height: auto;
+          gap: 28px;
+          padding: 22px 0 58px;
+        }
+
+        .eyebrow {
+          max-width: 100%;
+          font-size: 14px;
+        }
+
+        h1 {
+          margin-top: 22px;
+          font-size: clamp(64px, 20vw, 88px);
+          line-height: 0.94;
+        }
+
+        .hero-copy {
+          font-size: 22px;
+          line-height: 1.58;
+        }
+
+        .button {
+          min-height: 58px;
+          padding: 0 22px;
+          font-size: 17px;
+        }
+
         .floating {
           min-width: 120px;
           padding: 13px;
@@ -527,6 +671,31 @@
         .era-card {
           padding: 24px;
         }
+
+        .asset-chip,
+        .inquiry-panel {
+          border-radius: 24px;
+          padding: 24px;
+        }
+
+        .inquiry-panel h2 {
+          font-size: clamp(38px, 11vw, 54px);
+          line-height: 1.05;
+        }
+
+        .inquiry-panel p {
+          font-size: 18px;
+          line-height: 1.7;
+        }
+
+        .inquiry-list li {
+          display: grid;
+          gap: 8px;
+        }
+
+        .inquiry-list strong {
+          overflow-wrap: anywhere;
+        }
       }
     </style>
   </head>
@@ -539,8 +708,9 @@
       <nav class="nav-links" aria-label="页面导航">
         <a href="#meaning">词元</a>
         <a href="#shift">02 时代</a>
+        <a href="#asset">Why 02.ai</a>
         <a href="#system">智能化</a>
-        <a class="pill" href="#start">进入 02</a>
+        <a class="pill" href="#inquiry">Acquire 02.ai</a>
       </nav>
     </header>
 
@@ -552,8 +722,12 @@
           <p class="hero-copy">
             如果 <strong>01 是 bit</strong>，让世界被数字化；那么 <strong>02 是 token / 词元</strong>，让知识、意图、行动与价值被智能体理解、生成和协作。
           </p>
+          <p class="asset-line">
+            02.ai is a two-character .ai domain for the next intelligent web: short, exact, memorable, and native to AI brands, agents, token systems and model interfaces.
+          </p>
           <div class="actions">
-            <a class="button primary" href="#shift">看懂 01 → 02</a>
+            <a class="button primary" href="#inquiry">Acquire 02.ai</a>
+            <a class="button secondary" href="#shift">看懂 01 → 02</a>
             <a class="button secondary" href="#meaning">什么是词元</a>
           </div>
         </div>
@@ -567,6 +741,40 @@
             02.intelligize(<span>tokens</span>)<br />
             return 新的创造界面
           </div>
+        </div>
+      </section>
+
+      <section id="asset" class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Why 02.ai</p>
+            <h2>一个两字符 .ai，承接 01 之后的智能入口。</h2>
+          </div>
+          <p class="section-note">
+            02.ai 不是普通缩写。它同时拥有数字序列、AI 后缀、token 语义和中英文品牌延展性，适合作为面向未来的战略域名资产。
+          </p>
+        </div>
+        <div class="asset-grid">
+          <article class="asset-chip">
+            <b>01</b>
+            <h3>Two characters</h3>
+            <p>两字符组合极短，便于记忆、输入、传播，也天然适合品牌标识与产品入口。</p>
+          </article>
+          <article class="asset-chip">
+            <b>02</b>
+            <h3>Native .ai</h3>
+            <p>.ai 后缀直接指向人工智能语境，减少解释成本，提升终端买家的品牌联想。</p>
+          </article>
+          <article class="asset-chip">
+            <b>03</b>
+            <h3>After 01</h3>
+            <p>01 代表 bit 与数字化，02 可以自然承接 token、agent 与智能化的下一阶段叙事。</p>
+          </article>
+          <article class="asset-chip">
+            <b>04</b>
+            <h3>Token narrative</h3>
+            <p>词元连接语言、模型、上下文、成本与价值，是 AI 产品最容易被理解的新单位。</p>
+          </article>
         </div>
       </section>
 
@@ -660,10 +868,35 @@
             当世界从“被连接”走向“被理解”，新的单位需要新的名字。02.ai 选择“词元”作为智能时代的起点：从一个词，到一个任务；从一次生成，到一套自动运转的智能系统。
           </p>
           <div class="sources" aria-label="新闻与术语参考">
-            <a href="https://www.termonline.cn/" target="_blank" rel="noreferrer">术语在线 / 全国科技名词委</a>
-            <a href="https://www.stdaily.com/" target="_blank" rel="noreferrer">科技日报相关报道</a>
-            <a href="https://www.chinanews.com.cn/" target="_blank" rel="noreferrer">中新社相关报道</a>
+            <a href="https://www.chinanews.com.cn/gn/2026/03-26/10593301.shtml" target="_blank" rel="noreferrer">全国科技名词委推荐“词元”</a>
+            <a href="https://www.stdaily.com/web/gdxw/2026-04/26/content_508462.html" target="_blank" rel="noreferrer">科技日报：AI Token Factory</a>
+            <a href="https://www.stdaily.com/web/gdxw/2026-04/29/content_509982.html" target="_blank" rel="noreferrer">科技日报：词元调用量增长</a>
           </div>
+        </div>
+      </section>
+
+      <section id="inquiry" class="shell">
+        <div class="inquiry">
+          <div class="inquiry-panel">
+            <p class="kicker">Strategic Acquisition</p>
+            <h2>Acquire 02.ai for an AI-native brand, agent platform, or token system.</h2>
+            <p>
+              02.ai is available for serious strategic acquisition inquiries. The preferred buyer is a long-term builder in AI infrastructure, agent workflows, model interfaces, token economics, or intelligent web products.
+            </p>
+            <div class="actions">
+              <a class="button primary" href="mailto:contact@02.ai?subject=Acquisition%20inquiry%20for%2002.ai">Request acquisition details</a>
+              <a class="button ghost" href="#asset">Review asset logic</a>
+            </div>
+          </div>
+          <aside class="inquiry-panel" aria-label="02.ai acquisition profile">
+            <ul class="inquiry-list">
+              <li><span>Domain</span><strong>02.ai</strong></li>
+              <li><span>Category</span><strong>Two-character .ai</strong></li>
+              <li><span>Brand logic</span><strong>01 → 02</strong></li>
+              <li><span>Core meaning</span><strong>token / 词元</strong></li>
+              <li><span>Use cases</span><strong>AI agents, token systems, model UI</strong></li>
+            </ul>
+          </aside>
         </div>
       </section>
     </main>
